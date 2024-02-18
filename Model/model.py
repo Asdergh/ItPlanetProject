@@ -17,10 +17,9 @@ class Model():
         self.L1_reg_rate = L1_regularization_rate
         self.L2_reg_rate = L2_regularization_rate
 
-        self.data_discription = DataDiscriptor(dataset_base_dir="C:\Users\1\Desktop\SPECIAL_FOR_IT_PLANET\datasets")
-        self.data_discription._load_data()
-        self.data_discription._generate_dataset()
-        self.data_discription._make_data_tensors()
+        self.data_discription = DataDiscriptor(dataset_base_dir="C:\\Users\\1\\Desktop\\datasets")
+        self.data_discription.load_data()
+        self.data_discription.build_data()
 
         self.first_model_constant_width = len(self.data_discription.data_buffer[0]["subject number: 1"]["steps"]["samples"][0])
         self.second_model_constant_width = len(self.data_discription.data_buffer[0]["subject number: 1"]["steps"]["samples"])
@@ -31,69 +30,64 @@ class Model():
     # метод для генерации модели глубокого обучение
     # данный метод создает модель по тиму бинарного классификатра
         
-    def _build_model(self):
+    def build_model(self):
 
         
         self.first_input_tensor = tf.keras.Input(shape=(self.first_model_constant_width, ))
         self.second_input_tensor = tf.keras.Input(shape=(self.second_model_constant_width, ))
-        self.first_model_layers = []
-        self.second_model_layers = []
         
-        for layer_number in range(self.first_model_depth - 1):
 
-            if self.L1_reg_rate is None:
-                
-                if not self.first_model_layers:
-                    curent_layer = tf.keras.layers.Dense(self.first_model_constant_width, activation="relu")(self.first_input_tensor)
-                
-                else :
-                    curent_layer = tf.keras.layers.Dense(self.first_model_constant_width, activation="relu")(self.first_model_layes[layer_number - 1])
-            
-            else:
 
-                if not self.first_model_layers:
-                    curent_layer = tf.keras.layers.Dense(self.first_model_constant_width, activation="relu", 
-                                                         kernel_regularizer=tf.keras.regularizers.L1(self.L1_reg_rate),
-                                                         activity_regularizer=tf.keras.regularizers.L2(self.L2_reg_rate))(self.first_input_tensor)
+        self.first_model_dense_layer = tf.keras.layers.Dense(self.first_model_constant_width, activation="relu",
+                                                             kernel_regularizer=tf.keras.regularizers.L1(self.L1_reg_rate),
+                                                             activity_regularizer=tf.keras.regularizers.L2(self.L2_reg_rate))(self.first_input_tensor)
         
-                
-                else :
-                    curent_layer = tf.keras.layers.Dense(self.first_model_constant_width, activation="relu", 
-                                            kernel_regularizer=tf.keras.regularizers.L1(self.L1_reg_rate),
-                                            activity_regularizer=tf.keras.regularizers.L2(self.L2_reg_rate))(self.first_model_layers[layer_number - 1])
-            
-            self.first_model_layers.append(curent_layer)
-        self.first_model_last_layer = tf.keras.layers.Dense(1, activation="sigmoid")
-        self.first_model_layers.append(self.first_model_last_layer)
-
-        for layer_number in range(self.second_model_depth - 1):
-
-            if self.L1_reg_rate is None:
-                
-                if not self.first_model_layers:
-                    curent_layer = tf.keras.layers.Dense(self.second_model_constant_width, 
-                                                         activation="relu")(self.second_input_tensor)
-                
-                else :
-                    curent_layer = tf.keras.layers.Dense(self.second_model_constant_width, 
-                                                         activation="relu")(self.first_model_layes[layer_number - 1])
-            
-            else:
-
-                if not self.first_model_layers:
-                    curent_layer = tf.keras.layers.Dense(self.second_model_constant_width, activation="relu", 
-                                                         kernel_regularizer=tf.keras.regularizers.L1(self.L1_reg_rate),
-                                                         activity_regularizer=tf.keras.regularizers.L2(self.L2_reg_rate))(self.second_input_tensor)
+        self.first_model_dense_layer = tf.keras.layers.Dense(self.first_model_constant_width, activation="relu",
+                                                             kernel_regularizer=tf.keras.regularizers.L1(self.L1_reg_rate),
+                                                             activity_regularizer=tf.keras.regularizers.L2(self.L2_reg_rate))(self.first_model_dense_layer)
         
-                
-                else :
-                    curent_layer = tf.keras.layers.Dense(self.second_model_constant_width, activation="relu", 
-                                            kernel_regularizer=tf.keras.regularizers.L1(self.L1_reg_rate),
-                                            activity_regularizer=tf.keras.regularizers.L2(self.L2_reg_rate))(self.first_model_layers[layer_number - 1])
+        self.first_model_dense_layer = tf.keras.layers.Dense(self.first_model_constant_width, activation="relu",
+                                                             kernel_regularizer=tf.keras.regularizers.L1(self.L1_reg_rate),
+                                                             activity_regularizer=tf.keras.regularizers.L2(self.L2_reg_rate))(self.first_model_dense_layer)
+        
+        self.first_model_dense_layer = tf.keras.layers.Dense(self.first_model_constant_width, activation="relu",
+                                                             kernel_regularizer=tf.keras.regularizers.L1(self.L1_reg_rate),
+                                                             activity_regularizer=tf.keras.regularizers.L2(self.L2_reg_rate))(self.first_model_dense_layer)
+        
+        self.first_model_dense_layer = tf.keras.layers.Dense(self.first_model_constant_width, activation="relu",
+                                                             kernel_regularizer=tf.keras.regularizers.L1(self.L1_reg_rate),
+                                                             activity_regularizer=tf.keras.regularizers.L2(self.L2_reg_rate))(self.first_model_dense_layer)
+        
+        self.first_model_last_layer = self.first_model_dense_layer = tf.keras.layers.Dense(1, activation="sigmoid",
+                                                             kernel_regularizer=tf.keras.regularizers.L1(self.L1_reg_rate),
+                                                             activity_regularizer=tf.keras.regularizers.L2(self.L2_reg_rate))(self.first_model_dense_layer)
+        
 
-            self.second_model_layers.append(curent_layer)
-        self.second_model_last_layer = tf.keras.layers.Dense(1, activation="sigmoid")
-        self.second_model_layers.append(self.second_model_last_layer)
+
+        self.second_model_dense_layer = tf.keras.layers.Dense(self.second_model_constant_width, activation="relu",
+                                                             kernel_regularizer=tf.keras.regularizers.L1(self.L1_reg_rate),
+                                                             activity_regularizer=tf.keras.regularizers.L2(self.L2_reg_rate))(self.second_input_tensor)
+        
+        self.second_model_dense_layer = tf.keras.layers.Dense(self.second_model_constant_width, activation="relu",
+                                                             kernel_regularizer=tf.keras.regularizers.L1(self.L1_reg_rate),
+                                                             activity_regularizer=tf.keras.regularizers.L2(self.L2_reg_rate))(self.second_model_dense_layer)
+        
+        self.second_model_dense_layer = tf.keras.layers.Dense(self.second_model_constant_width, activation="relu",
+                                                             kernel_regularizer=tf.keras.regularizers.L1(self.L1_reg_rate),
+                                                             activity_regularizer=tf.keras.regularizers.L2(self.L2_reg_rate))(self.second_model_dense_layer)
+        
+        self.second_model_dense_layer = tf.keras.layers.Dense(self.second_model_constant_width, activation="relu",
+                                                             kernel_regularizer=tf.keras.regularizers.L1(self.L1_reg_rate),
+                                                             activity_regularizer=tf.keras.regularizers.L2(self.L2_reg_rate))(self.second_model_dense_layer)
+        
+        self.second_model_dense_layer = tf.keras.layers.Dense(self.second_model_constant_width, activation="relu",
+                                                             kernel_regularizer=tf.keras.regularizers.L1(self.L1_reg_rate),
+                                                             activity_regularizer=tf.keras.regularizers.L2(self.L2_reg_rate))(self.second_model_dense_layer)
+        
+        self.second_model_last_layer = self.first_model_dense_layer = tf.keras.layers.Dense(1, activation="sigmoid",
+                                                             kernel_regularizer=tf.keras.regularizers.L1(self.L1_reg_rate),
+                                                             activity_regularizer=tf.keras.regularizers.L2(self.L2_reg_rate))(self.second_model_dense_layer)
+        
 
         self.first_model = tf.keras.Model(self.first_input_tensor, self.first_model_last_layer)
         self.second_model = tf.keras.Model(self.second_input_tensor, self.second_model_last_layer)
@@ -101,7 +95,7 @@ class Model():
 
 
         self.first_model.compile(
-            optimizer=tf.keras.optimizers.legacy.RMSProp(learning_rate=0.01),
+            optimizer=tf.keras.optimizers.legacy.RMSprop(learning_rate=0.01),
             loss=tf.keras.losses.BinaryCrossentropy(),
             metrics=tf.metrics.Accuracy()
         )
@@ -186,7 +180,44 @@ class Model():
     # выводиться информация об метрике обучения и потерях подсчитанных функцией потерь
     def show_history(self):
 
-        pass
+        plt.style.use("dark_background")
+        fig, axis = plt.subplots(nrows=3)
+
+        models_loss = [np.asarray(self.first_model_history.history["loss"]), 
+                       np.asarray(self.second_model_history.history["loss"]),
+                       np.asarray(self.second_model_history.history["val_loss"])]
+        
+        models_acc = [np.asarray(self.first_model_history.history["acc"]),
+                      np.asarray(self.second_model_history.history["acc"]),
+                      np.asarray(self.second_model_history.history["val_acc"])]
+        
+        colors = ["green", "blue", "orange"]
+        labels = [["first_model loss", "first_model acc"], ["second_model loss", "second_model acc"], ["second_model val_loss", "second_model val_acc"]]
+        linestyles = ["", "", "--"]
+
+        for (samples_number, samples) in enumerate(zip(models_loss, models_acc)):
+
+            axis[samples_number].plot(range(1, samples[0].shape[0] + 1), samples[0], color=colors[samples_number], label=labels[samples_number], linestyle=linestyles[samples_number])
+            axis[samples_number].legend(loc="upper left")
+        
+        plt.show()
+
+
+if __name__ == "__main__":
+
+    model = Model(
+        first_model_depth=5,
+        second_model_depth=5,
+        L1_regularization_rate=0.1,
+        L2_regularization_rate=0.01
+    )
+
+    model.build_model()
+    model.fit_model()
+    model.show_history() 
+
+    
+
         
 
 

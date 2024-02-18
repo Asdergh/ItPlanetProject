@@ -13,7 +13,7 @@ class DataDiscriptor():
         self.dataset_base_dir = dataset_base_dir
 
     # метод подгрузки данных из файлов (данный метод специализирован на получения данных оного формата .jsonl)
-    def _load_data(self):
+    def load_data(self):
 
         self.data_buffer = []
         for json_file in os.listdir(self.dataset_base_dir):
@@ -59,14 +59,16 @@ class DataDiscriptor():
             if batch_number == 0:
                 
                 for (subject_number, subject) in enumerate(data_batch):
-                    for (sample_number, sample) in enumerate(subject["steps"]["samples"]):
+                    
+                    curent_subject_id = data_batch[subject]["id"]
+                    for (sample_number, sample) in enumerate(data_batch[subject]["steps"]["samples"]):
                         
                         sample_data = np.asarray([feature for feature in sample.values()])
-                        last_vector = np.asarray([data_batch[2][f"subject number: {subject_number}"]["birth_date"], 
-                                                  data_batch[2][subject_number]["weight"], 1])
+                        # last_vector = np.asarray([self.data_buffer[-1][curent_subject_id]["birth_date"], 
+                        #                           self.data_buffer[-1][curent_subject_id]["weight"], 1])
                         
-                        self.chiters_activity_tensor[subject_number, sample_number, :-3] = sample_data
-                        self.chiters_activity_tensor[subject_number, sample_number, -3:] = last_vector
+                        # self.chiters_activity_tensor[subject_number, sample_number, :-3] = sample_data
+                        # self.chiters_activity_tensor[subject_number, sample_number, -3:] = last_vector
                         
                         self.samples_tensor[curent_samples_index, :-1] = sample_data
                         self.samples_tensor[curent_samples_index, :-1] = 1
@@ -79,11 +81,11 @@ class DataDiscriptor():
                     for (sample_number, sample) in enumerate(subject["steps"]["samples"]):
                         
                         sample_data = np.asarray([feature for feature in sample.values()])
-                        last_vector = np.asarray([data_batch[2][f"subject number: {subject_number}"]["birth_date"], 
-                                                  data_batch[2][subject_number]["weight"], 0])
+                        # last_vector = np.asarray([data_batch[2][f"subject number: {subject_number}"]["birth_date"], 
+                        #                           data_batch[2][subject_number]["weight"], 0])
                         
-                        self.none_chiters_activity_tensor[subject_number, sample_number, :-3] = sample_data
-                        self.none_chiters_activity_tensor[subject_number, sample_number, -3:] = last_vector
+                        # self.none_chiters_activity_tensor[subject_number, sample_number, :-3] = sample_data
+                        # self.none_chiters_activity_tensor[subject_number, sample_number, -3:] = last_vector
 
                         self.samples_tensor[curent_samples_index, :-1] = sample_data
                         self.samples_tensor[curent_samples_index, -1] = 0
@@ -91,27 +93,25 @@ class DataDiscriptor():
                         curent_samples_index += 1
 
         
-        return self.chiters_activity_tensor, self.none_chiters_activity_tensor, self.samples_tensor
+        return  self.samples_tensor
 
     # метод поректирование данных в результирующие тензоры для подачу на обучение нейронной сети
-    def bulid_data(self):
+    def build_data(self):
 
 
-        chiters_features, none_chiters_features, samples_features = self._make_data_tensors()
+        samples_features = self._make_data_tensors()
         
-        self.result_features = np.vstack((chiters_features, none_chiters_features))
+        # self.result_features = np.vstack((chiters_features, none_chiters_features))
         
-        self.shuffle_result_general_features = np.random.permutation(self.result_features)
-        self.shuffle_result_samples_features = np.random.permutation(self.samples_features)
+        # self.shuffle_result_general_features = np.random.permutation(self.result_features)
+        self.shuffle_result_samples_features = np.random.permutation(samples_features)
 
-        self.general_train_data = self.shuffle_result_general_features[:self.shuffle_result_general_features.shape[0] // 2, :, :-1]
-        self.general_train_labels = self.shuffle_result_general_features[:self.shuffle_result_general_features.shape[0] // 2, :, -1]
         
         self.samples_train_data = self.shuffle_result_samples_features[:self.shuffle_result_samples_features.shape[0] // 2, :-1]
         self.samples_train_labels = self.shuffle_result_samples_features[:self.shuffle_result_samples_features.shape[0] // 2, -1]
 
-        self.samples_test_data = self.shuffle_result_samples_features[self.shuffle_Result_samples_features.shape[0] // 2:, :-1]
-        self.samples_test_labels = self.shuffle_result_samples_features[self.shuffle_Result_samples_features.shape[0] // 2:, -1]
+        self.samples_test_data = self.shuffle_result_samples_features[self.shuffle_result_samples_features.shape[0] // 2:, :-1]
+        self.samples_test_labels = self.shuffle_result_samples_features[self.shuffle_result_samples_features.shape[0] // 2:, -1]
     
 
 

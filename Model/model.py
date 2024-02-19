@@ -172,8 +172,11 @@ class Model():
             validation_data=(self.second_test_data, self.second_test_labels),
             batch_size=30,
             epochs=100
-
         )
+
+        self.first_model.save("C:\\Users\\1\\Desktop\\ItPLanetProject2\\SavedModels\\first_model.keras")
+        self.second_model.save("C:\\Users\\1\\Desktop\\ItPLanetProject2\\SavedModels\\second_model.keras")
+
     
     
     # метод для демонстрации хода обучения

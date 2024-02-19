@@ -50,7 +50,7 @@ class DataDiscriptor():
         self.samples_tensor = np.zeros(shape=(
             len(self.data_buffer[1]) * len(self.data_buffer[1]["subject number: 1"]["steps"]["samples"]),
             len(self.data_buffer[1]["subject number: 1"]["steps"]["samples"][0]) + 1
-        ))
+        ), dtype="float32")
         
         curent_samples_index = 0
         for (batch_number, data_batch) in enumerate(self.data_buffer[:-2]):
@@ -58,12 +58,16 @@ class DataDiscriptor():
             
             if batch_number == 0:
                 
-                for (subject_number, subject) in enumerate(data_batch):
+                for subject in data_batch:
                     
-                    curent_subject_id = data_batch[subject]["id"]
-                    for (sample_number, sample) in enumerate(data_batch[subject]["steps"]["samples"]):
+                    for sample in data_batch[subject]["steps"]["samples"]:
                         
-                        sample_data = np.asarray([feature for feature in sample.values()])
+                        sample_data = [float(feature) for feature in sample.values()]
+                        sample_data[0] = sample_data[0] * (10 ** -5)
+                        sample_data[1] = sample_data[1] / 120
+
+                        print(sample_data[0], sample_data[1], type(sample_data[0]), type(sample_data[1]))
+
                         # last_vector = np.asarray([self.data_buffer[-1][curent_subject_id]["birth_date"], 
                         #                           self.data_buffer[-1][curent_subject_id]["weight"], 1])
                         
@@ -71,25 +75,33 @@ class DataDiscriptor():
                         # self.chiters_activity_tensor[subject_number, sample_number, -3:] = last_vector
                         
                         self.samples_tensor[curent_samples_index, :-1] = sample_data
-                        self.samples_tensor[curent_samples_index, :-1] = 1
+                        self.samples_tensor[curent_samples_index, -1] = 1
 
+                        print(f"\nCurent samples number: [{curent_samples_index}], Samples: {self.samples_tensor[curent_samples_index]}\n")
+                        print(sample_data)
                         curent_samples_index += 1
             
             elif batch_number == 1:
-
-                for (subject_number, subject) in enumerate(data_batch):
-                    for (sample_number, sample) in enumerate(subject["steps"]["samples"]):
+                
+                
+                for subject in data_batch:
+                    for sample in subject["steps"]["samples"]:
                         
-                        sample_data = np.asarray([feature for feature in sample.values()])
+                        sample_data = np.asarray([int(feature) for feature in sample.values()])
+                        sample_data[0] = sample_data[0] * (10 ** -5)
+                        sample_data[1] = sample_data[1] / 120
+                        
+                        print(sample_data[0], sample_data[1], type(sample_data[0]), type(sample_data[1]))
                         # last_vector = np.asarray([data_batch[2][f"subject number: {subject_number}"]["birth_date"], 
                         #                           data_batch[2][subject_number]["weight"], 0])
                         
                         # self.none_chiters_activity_tensor[subject_number, sample_number, :-3] = sample_data
                         # self.none_chiters_activity_tensor[subject_number, sample_number, -3:] = last_vector
-
+                        
                         self.samples_tensor[curent_samples_index, :-1] = sample_data
                         self.samples_tensor[curent_samples_index, -1] = 0
 
+                        print(f"\nCurent samples number: [{curent_samples_index}], Samples: {self.samples_tensor[curent_samples_index]}\n")
                         curent_samples_index += 1
 
         
@@ -104,6 +116,8 @@ class DataDiscriptor():
         # self.result_features = np.vstack((chiters_features, none_chiters_features))
         
         # self.shuffle_result_general_features = np.random.permutation(self.result_features)
+        
+        print(samples_features)
         self.shuffle_result_samples_features = np.random.permutation(samples_features)
 
         
@@ -112,6 +126,8 @@ class DataDiscriptor():
 
         self.samples_test_data = self.shuffle_result_samples_features[self.shuffle_result_samples_features.shape[0] // 2:, :-1]
         self.samples_test_labels = self.shuffle_result_samples_features[self.shuffle_result_samples_features.shape[0] // 2:, -1]
+
+        print(self.samples_train_data, self.samples_train_labels)
     
 
 

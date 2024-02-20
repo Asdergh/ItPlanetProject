@@ -49,75 +49,46 @@ class DataDiscriptor():
 
         self.samples_tensor = np.zeros(shape=(
             len(self.data_buffer[1]) * len(self.data_buffer[1]["subject number: 1"]["steps"]["samples"]),
-            len(self.data_buffer[1]["subject number: 1"]["steps"]["samples"][0]) + 3
+            len(self.data_buffer[1]["subject number: 1"]["steps"]["samples"][0]) + 4
         ), dtype="float32")
         
+
         curent_samples_index = 0
-        for (batch_number, data_batch) in enumerate(self.data_buffer[:-1]):
-
+        for (batch_number, data_batch) in self.data_buffer[:-1]:
             
-            if batch_number == 0:
-
-                print("TEST ONE")
-                for subject in data_batch:
-                    
-                    for sample in data_batch[subject]["steps"]["samples"]:
-                        
-                        distance_data = float(data_batch[subject]["steps"]["meters"])
-                        steps_count = float(data_batch[subject]["steps"]["steps"])
-
-                        sample_data = [float(feature) for feature in sample.values()]
-                        sample_data[0] = sample_data[0] * (10 ** -5)
-                        sample_data[1] = sample_data[1] / 120
-
-                        sample_data.append(distance_data)
-                        sample_data.append(steps_count)
+            for (subject_number, subject) in enumerate(data_batch):
 
 
-                        print(sample_data[0], sample_data[1], type(sample_data[0]), type(sample_data[1]))
-
-                        # last_vector = np.asarray([self.data_buffer[-1][curent_subject_id]["birth_date"], 
-                        #                           self.data_buffer[-1][curent_subject_id]["weight"], 1])
-                        
-                        # self.chiters_activity_tensor[subject_number, sample_number, :-3] = sample_data
-                        # self.chiters_activity_tensor[subject_number, sample_number, -3:] = last_vector
-                        
-                        self.samples_tensor[curent_samples_index, :-1] = sample_data
-                        self.samples_tensor[curent_samples_index, -1] = 1
-
-                        print(f"\nCurent samples number: [{curent_samples_index}], Samples: {self.samples_tensor[curent_samples_index]}\n")
-                        print(sample_data)
-                        curent_samples_index += 1
-            
-            elif batch_number == 1:
+                subject_data = np.asarray([[float(feature)
+                                        for feature in sample.value()] 
+                                        for sample in data_batch[subject]["steps"]["samples"]])
                 
-                print("TEST TWO")
-                for subject in data_batch:
-                    for sample in data_batch[subject]["steps"]["samples"]:
-                        
+                add_data = [float(data_batch[subject]["steps"]["steps"]),
+                            float(data_batch[subject]["steps"]["meters"]),
+                            float(data_batch[subject]["steps"]["day"])]
+                    
+                if batch_number == 0:
 
-                        distance_data = float(data_batch[subject]["steps"]["meters"])
-                        steps_count = float(data_batch[subject]["steps"]["steps"])
+                    add_data.append(0)
+                    
+                else:
 
-                        sample_data = np.asarray([float(feature) for feature in sample.values()])
-                        sample_data[0] = sample_data[0] * (10 ** -5)
-                        sample_data[1] = sample_data[1] / 120
-                        
-                        sample_data.append(distance_data)
-                        sample_data.append(steps_count)
-                        
-                        print(sample_data[0], sample_data[1], type(sample_data[0]), type(sample_data[1]))
-                        # last_vector = np.asarray([data_batch[2][f"subject number: {subject_number}"]["birth_date"], 
-                        #                           data_batch[2][subject_number]["weight"], 0])
-                        
-                        # self.none_chiters_activity_tensor[subject_number, sample_number, :-3] = sample_data
-                        # self.none_chiters_activity_tensor[subject_number, sample_number, -3:] = last_vector
-                        
-                        self.samples_tensor[curent_samples_index, :-1] = sample_data
-                        self.samples_tensor[curent_samples_index, -1] = 0
+                    add_data.append(1)
+                    
 
-                        print(f"\nCurent samples number: [{curent_samples_index}], Samples: {self.samples_tensor[curent_samples_index]}\n")
-                        curent_samples_index += 1
+                self.samples_tensor[subject_number * subject_data.shape[0]: (subject_number + 1) * subject_data.shape[0], :-2] = subject_data
+                self.samples_tensor[subject_number * subject_data.shape[0]: (subject_number + 1) * subject_data.shape[0], -2:] = add_data
+                curent_samples_index += 1
+        
+        
+        print(f"Final result: {self.samples_tensor}")
+        return self.samples_tensor
+
+
+                
+                
+
+
 
         
         return  self.samples_tensor

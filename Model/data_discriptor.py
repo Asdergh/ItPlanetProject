@@ -49,22 +49,30 @@ class DataDiscriptor():
 
         self.samples_tensor = np.zeros(shape=(
             len(self.data_buffer[1]) * len(self.data_buffer[1]["subject number: 1"]["steps"]["samples"]),
-            len(self.data_buffer[1]["subject number: 1"]["steps"]["samples"][0]) + 1
+            len(self.data_buffer[1]["subject number: 1"]["steps"]["samples"][0]) + 3
         ), dtype="float32")
         
         curent_samples_index = 0
-        for (batch_number, data_batch) in enumerate(self.data_buffer[:-2]):
+        for (batch_number, data_batch) in enumerate(self.data_buffer[:-1]):
 
             
             if batch_number == 0:
-                
+
+                print("TEST ONE")
                 for subject in data_batch:
                     
                     for sample in data_batch[subject]["steps"]["samples"]:
                         
+                        distance_data = float(data_batch[subject]["steps"]["meters"])
+                        steps_count = float(data_batch[subject]["steps"]["steps"])
+
                         sample_data = [float(feature) for feature in sample.values()]
                         sample_data[0] = sample_data[0] * (10 ** -5)
                         sample_data[1] = sample_data[1] / 120
+
+                        sample_data.append(distance_data)
+                        sample_data.append(steps_count)
+
 
                         print(sample_data[0], sample_data[1], type(sample_data[0]), type(sample_data[1]))
 
@@ -83,13 +91,20 @@ class DataDiscriptor():
             
             elif batch_number == 1:
                 
-                
+                print("TEST TWO")
                 for subject in data_batch:
-                    for sample in subject["steps"]["samples"]:
+                    for sample in data_batch[subject]["steps"]["samples"]:
                         
-                        sample_data = np.asarray([int(feature) for feature in sample.values()])
+
+                        distance_data = float(data_batch[subject]["steps"]["meters"])
+                        steps_count = float(data_batch[subject]["steps"]["steps"])
+
+                        sample_data = np.asarray([float(feature) for feature in sample.values()])
                         sample_data[0] = sample_data[0] * (10 ** -5)
                         sample_data[1] = sample_data[1] / 120
+                        
+                        sample_data.append(distance_data)
+                        sample_data.append(steps_count)
                         
                         print(sample_data[0], sample_data[1], type(sample_data[0]), type(sample_data[1]))
                         # last_vector = np.asarray([data_batch[2][f"subject number: {subject_number}"]["birth_date"], 
@@ -117,7 +132,7 @@ class DataDiscriptor():
         
         # self.shuffle_result_general_features = np.random.permutation(self.result_features)
         
-        print(samples_features)
+        print(f"Samples features tensor: {samples_features}")
         self.shuffle_result_samples_features = np.random.permutation(samples_features)
 
         
@@ -127,7 +142,7 @@ class DataDiscriptor():
         self.samples_test_data = self.shuffle_result_samples_features[self.shuffle_result_samples_features.shape[0] // 2:, :-1]
         self.samples_test_labels = self.shuffle_result_samples_features[self.shuffle_result_samples_features.shape[0] // 2:, -1]
 
-        print(self.samples_train_data, self.samples_train_labels)
+        print(self.samples_train_data[0], self.samples_train_labels[0])
     
 
 

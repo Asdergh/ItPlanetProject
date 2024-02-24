@@ -21,7 +21,7 @@ class Model():
         self.data_discription.load_data()
         self.data_discription.build_data()
 
-        self.first_model_constant_width = len(self.data_discription.data_buffer[0]["subject number: 1"]["steps"]["samples"][0]) + 2
+        self.first_model_constant_width = len(self.data_discription.data_buffer[0]["subject number: 1"]["steps"]["samples"][0]) + 3
         self.second_model_constant_width = len(self.data_discription.data_buffer[0]["subject number: 1"]["steps"]["samples"])
 
         

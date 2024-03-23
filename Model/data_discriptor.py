@@ -2,6 +2,7 @@ import numpy as np
 import json as js
 import os
 import matplotlib.pyplot as plt
+import pandas as pd
 
 from sklearn.decomposition import PCA
 
@@ -15,246 +16,243 @@ class DataDiscriptor():
             pass
 
     
-    def _data_loader(self, start_position, max_data, base_dir):
-          
+    def _data_loader(self, max_data=None, start_position=0, base_dir=None, base_file_path=None):
+
         data_buffer = {}
 
-        for json_file in os.listdir(base_dir)[:-1]:
+        if base_dir is not None and (base_file_path is None or base_file_path is not None):
 
+            if max_data is None:
 
-            curent_file = os.path.join(base_dir, json_file)
-            curent_data_buffer = {}
-            with open (curent_file) as file:
-
-                json_data = file.readlines()
-                json_data = json_data[start_position: max_data]
-
-                for (json_number, json_per_line) in enumerate(json_data):
-                    
-                
-                    json_format = js.loads(json_per_line)
-                    curent_data_buffer[f"subject_number: {json_number}"] = json_format
+                raise ValueError("[max_data is a reguared param] !!!")
             
-            data_buffer[json_file] = curent_data_buffer
+            for json_file in os.listdir(base_dir)[:-1]:
 
+                print(json_file)
+                curent_file = os.path.join(base_dir, json_file)
+                curent_data_buffer = {}
+                with open (curent_file) as file:
 
-        person_id_list = []
-        for data_batch in data_buffer.keys():
-            for subject in data_buffer[data_batch].keys():
+                    json_data = file.readlines()
+                    json_data = json_data[start_position: max_data]
 
-                person_id_list.append(data_buffer[data_batch][subject]["profile_id"])
-
-
-        person_log_file = os.path.join(base_dir, os.listdir(base_dir)[-1])
-        person_info_buffer = {}
-
-        with open(person_log_file) as file:
-
-            json_data = file.readlines()
-            for (json_number, json_per_line) in enumerate(json_data):
-
-                json_format_data = js.loads(json_per_line)
-                if json_format_data["id"] in person_id_list:
-
-                    person_info_buffer[json_format_data["id"]] = json_format_data
-        
-        return data_buffer, person_info_buffer
-
-
-
-    def _generate_data(self, person_info_buffer, data_buffer, generation_type="all"):
-
-
-
-
-            data_list = []
-            for (batch_number, data_batch) in enumerate(data_buffer.keys()):
-
-                gender_labels = {
-                    "male": 1.0,
-                    "female": 2.0
-                }
-
-                personal_goal_labels = {
-                    "unknown_goal": 0.0,
-                    "lose_weight": 1.0,
-                    "childrens_training": 2.0,
-                    "relief": 3.0,
-                    "strength": 4.0,
-                    "antistress": 5.0,
-                    "learn_swim": 6.0,
-                    "flexibility": 7.0,
-                    "body_balance": 8.0,
-                    "fun": 9.0,
-                    "rehabilitation": 10.0
-                }
-
+                    for (json_number, json_per_line) in enumerate(json_data):
+                        
+                    
+                        json_format = js.loads(json_per_line)
+                        curent_data_buffer[f"subject_number: {json_number}"] = json_format
                 
+                data_buffer[json_file] = curent_data_buffer
+
+
+            person_id_list = []
+            for data_batch in data_buffer.keys():
                 for subject in data_buffer[data_batch].keys():
 
+                    person_id_list.append(data_buffer[data_batch][subject]["profile_id"])
 
-                    curent_person_id = data_buffer[data_batch][subject]["profile_id"]
-                    curent_person_object = person_info_buffer[curent_person_id]
-                
+
+            person_log_file = os.path.join(base_dir, os.listdir(base_dir)[-1])
+            person_info_buffer = {}
+
+            with open(person_log_file) as file:
+
+                json_data = file.readlines()
+                for (json_number, json_per_line) in enumerate(json_data):
+
+                    json_format_data = js.loads(json_per_line)
+                    if json_format_data["id"] in person_id_list:
+
+                        person_info_buffer[json_format_data["id"]] = json_format_data
+            
+            return data_buffer, person_info_buffer
+
+
+        elif base_dir is None and base_file_path is not None:
+
+            with open(base_file_path, "r") as json_file:
+
+                data_buffer = js.load(json_file)
+                return data_buffer
+
+        elif base_dir is None and base_file_path is not None:
+
+            raise ValueError("[both datasets paths are none] !!!")
+
+
+
+    def _generate_input_samples(self, data_buffer):
+
+        profile = data_buffer["profile"]
+        sessions = data_buffer["sessions"]
+
+        result_data = []
+        profile_info = [float(profile[feature]) for feature in profile.keys() if feature not in ["sex", "id", "personal_goals"]]
+        
+        for session in sessions:
+            
+            min_variation = 1000000000000
+            session_samples = np.asarray([[float(sample[feature]) for feature in sample.keys() if feature != "duration"] for sample in session["steps"]["samples"]])
+            mean_vector = np.asarray([np.mean(session_samples[:, vector_number]) for vector_number in range(session_samples.shape[1])])
+
+            optim_vector = np.zeros(shape=mean_vector.shape)
+
+            session_general_data = [float(session[feature]) for feature in session.keys() if feature not in ["steps", "id", "timezone", "profile_id"]]
+            session_general_data[0] /= 360
+
+            session_steps_data = [float(session["steps"][feature]) for feature in session["steps"].keys() if feature != "samples"]
+            session_steps_data[0] *= 3.6e+6
+            session_steps_data[1] *= 3.6e+6
+
+            for curent_vector in session_samples:
+
+            
+                if min_variation > np.dot(curent_vector, mean_vector):
                     
-                    if "samples" in data_buffer[data_batch][subject]["steps"]:
-                        
-                        
-                        if "skllzz_with_artifacts" in data_buffer[data_batch][subject].keys():
+                    min_variation = np.dot(curent_vector, mean_vector)
+                    optim_vector = curent_vector
+            
+            optim_vector = list(optim_vector)
+            optim_vector[0] *= 3.6e+6
 
-                            subject_general_data = [
-                                (float(data_buffer[data_batch][subject]["stop_millis"]) * (10 ** -5)) - (float(data_buffer[data_batch][subject]["start_millis"]) * (10 ** -5)),
-                                float(data_buffer[data_batch][subject]["skllzz"]),
-                                float(data_buffer[data_batch][subject]["activity_day"]),
-                                float(data_buffer[data_batch][subject]["skllzz_with_artifacts"]),
-                                float(data_buffer[data_batch][subject]["skllzz_without_artifacts"]), 
-                            ]
-
-                        else:
-
-                            subject_general_data = [
-                                (float(data_buffer[data_batch][subject]["stop_millis"]) * (10 ** -5)) - (float(data_buffer[data_batch][subject]["start_millis"]) * (10 ** -5)),
-                                float(data_buffer[data_batch][subject]["skllzz"]),
-                                float(data_buffer[data_batch][subject]["activity_day"]),
-                                0.0,
-                                float(data_buffer[data_batch][subject]["skllzz_without_artifacts"]), 
-                            ]
-                        
-                        subject_pysical_data = [
-                            float(data_buffer[data_batch][subject]["steps"]["steps"]),
-                            float(data_buffer[data_batch][subject]["steps"]["day"]),
-                            float(data_buffer[data_batch][subject]["steps"]["meters"]) / 100
-                        ]
-
-                        subject_personal_data = [
-                            float(curent_person_object["birth_date"]) / 360,
-                            float(curent_person_object["hr_rest"]),
-                            float(curent_person_object["hr_max"]),
-                            float(curent_person_object["weight"])
-                        ]
-
-                        if "personal_goals" in curent_person_object.keys():
-
-                            subject_personal_goals = [personal_goal_labels[goal] for goal in curent_person_object["personal_goals"]]
-                            if len(subject_personal_goals) != len(personal_goal_labels):
-
-                                kernel = [personal_goal_labels["unknown_goal"] for _ in range(len(personal_goal_labels) - len(subject_personal_goals))]
-                                subject_personal_goals += kernel
-                        
-                        else:
-
-                            subject_personal_goals = [personal_goal_labels["unknown_goal"] for _ in range(len(personal_goal_labels))]
-                        
-                    
-
-                        if "skllzz_with_artifacts" in data_buffer[data_batch][subject].keys():
-                            subject_general_data.append(data_buffer[data_batch][subject]["skllzz_with_artifacts"])
-                        
-                        else:
-                            subject_general_data.append(0.0)
-                        
-                        add_vector = subject_general_data + subject_pysical_data + subject_personal_data + subject_personal_goals
-                        add_vector.append(float(batch_number))
-                        
-
-                        if generation_type == "per_day":
-
-                            for sample in data_buffer[data_batch][subject]["steps"]["samples"]:
-
-                                sample_data = [float(feature) for feature in sample.values()]
-                                sample_data[0] *= (10 ** -5)
-                                sample_data[1] /= 3600.0
-
-                                sample_data += add_vector
-                                
-                                # if len(sample_data) == 18:
-
-                                #     data_list.append(sample_data)
-                                
-                                data_list.append(sample_data)
-                        
-                        elif generation_type == "all":
-
-                            samples_data_list = []
-                            for sample in data_buffer[data_batch][subject]["steps"]["samples"]:
-                                
-                                sample_data = [float(feature) for feature in sample.values()]
-                                sample_data[0] *= (10 ** -5)
-                                sample_data[1] /= 3600.0
-                                
-                                samples_data_list += sample_data
-                                samples_data_list += add_vector
-
-                                data_list.append(samples_data_list)
-
-                        else:
-
-                            raise ValueError("you must condider data generation type ['all' or 'per_daya']")
-                        
-            return data_list
+            optim_vector += (session_general_data + session_steps_data + profile_info)
+            result_data.append(optim_vector)
+        
+        result_data = np.asarray(result_data)
+        return result_data
     
-    def _formulate_data(self, data_list, generation_type, max_from_samples=None):
+    
+    def _generate_data(self, data_buffer, person_info_buffer):
 
+        data_list = [] 
+        subjects_features = ["start_millis", "stop_millis", "skllzz", 
+                                "activity_day", "skllzz_with_artifacts", "skllzz_without_artifacts", 
+                                "steps", "day", "meters", 
+                                "birth_date", "hr_rest", "hr_max", 
+                                "weight", "kkal"]
+        
+        for (batch_number, data_batch) in enumerate(data_buffer):
 
-        if generation_type == "all":
+            print(data_batch)
+            sub_info = []
+            subjects = [key for key in data_buffer[data_batch].keys()]
+            subjects_id = [data_buffer[data_batch][subject]["profile_id"] for subject in subjects]
 
-                if max_from_samples is None:
+            for feature in subjects_features:
+                
+                subject_feature_list = []
+                for (subject, subject_id) in zip(subjects, subjects_id):
+                    
+                    if feature in ["day", "meters", "steps"]:
 
-                    max_sample_len = max([len(sample) for sample in data_list])
+                        if feature in data_buffer[data_batch][subject]["steps"].keys():
+                            subject_feature_list.append(float(data_buffer[data_batch][subject]["steps"][feature]))
 
-                else:
+                        else:
+                            subject_feature_list.append(0.0)
+                    
+                    elif feature in ["hr_max", "hr_rest", "weight", "birth_date"]:
 
-                    max_sample_len = max_from_samples
-
-                    data_tensor = np.zeros(shape=(len(data_list), max_sample_len))
-
-                    for sample_number in range(data_tensor.shape[0]):
-
-                        if data_list[sample_number] != data_tensor.shape[1]:
-
-                            class_label = data_list[sample_number][-1]
-                            none_class_list = data_list[sample_number][:-1]
-                            kernel_add = [0. for _ in range((max_sample_len - len(none_class_list)) - 1)]
-                            
-                            result_vector = none_class_list + kernel_add
-                            result_vector.append(class_label)
-                            result_vector = np.asarray(result_vector)
+                        if feature in person_info_buffer[subject_id].keys():
+                            subject_feature_list.append(float(person_info_buffer[subject_id][feature]))
                         
                         else:
+                            subject_feature_list.append(0.0)
+                    
+                    elif feature in ["stop_millis", "start_millis"]:
 
-                            result_vector = np.asarray(data_list[sample_number])
+                        if feature in data_buffer[data_batch][subject].keys():
+                            
+                            formated_millis = float(data_buffer[data_batch][subject][feature]) * 3.6e+6
+                            subject_feature_list.append(formated_millis)
+
+                        else:
+                            subject_feature_list.append(0.0)
+
+                    else:
+
+                        if feature in data_buffer[data_batch][subject].keys():
+                            subject_feature_list.append(float(data_buffer[data_batch][subject][feature]))
                         
-                        data_tensor[sample_number] = result_vector
+                        else:
+                            subject_feature_list.append(0.0)
+                
+                sub_info.append(subject_feature_list)
+            sub_info_tensor = np.asarray(sub_info, dtype="float32")
             
 
-        elif generation_type == "per_day":
+
+            for (subject_number, subject) in enumerate(data_buffer[data_batch].keys()):
+
+                add_vector = list(sub_info_tensor[:, subject_number]) + [batch_number, ]
+
+                if "samples" in data_buffer[data_batch][subject]["steps"].keys():
+
+                    min_var = 1000000000000000000000000000
+                    samples_data = np.asarray([[float(sample[feature]) for feature in sample.keys() if feature != "duration"] for sample in data_buffer[data_batch][subject]["steps"]["samples"]])
+                    mean_vector = [np.mean(samples_data[:, vector_number]) for vector_number in range(samples_data.shape[1])]
+                    optim_vector = None
+
+                    for sample in data_buffer[data_batch][subject]["steps"]["samples"]:
+                        
+                        sample_vector = np.asarray([float(sample[feature]) for feature in sample.keys() if feature != "duration"])
+                        if min_var > (np.dot(sample_vector, mean_vector)):
+
+                            min_var = (np.dot(sample_vector, mean_vector))
+                            optim_vector = list(sample_vector)
+
+
+                    optim_vector += add_vector
+                    optim_vector = np.asarray(optim_vector)
+                    optim_vector[0] *= 3.6e+6
+
+
+                else:
+                    optim_vector = [0.0, 0.0] + add_vector
                 
-            data_tensor = np.asarray(data_list)
+                data_list.append(optim_vector)
+
+
+
+        all_features = ["stamp_millis", "steps"] + subjects_features + ["class_labels", ]
+        data_tensor = np.asarray(data_list)
+        data_frame = pd.DataFrame(data=data_tensor,
+                                columns=all_features)
         
-        return data_tensor
+        return (data_frame, data_tensor)
     
 
-    def generate_data(self, base_dir, max_data_position, generation_type="all", 
-                      max_from_samples=None, start_data_position=0):
+    def _expand_randomization(self, data_tensor, need_shape):
 
-        pca_estimator = PCA(n_components=4)
+    
+        permutated_data_tensor = np.random.permutation(data_tensor)
+        random_normal_distrib = np.random.normal(0.19, 1.926, ((permutated_data_tensor.shape[1] - 1), need_shape))
+        result_expand = np.dot(permutated_data_tensor[:, :-1], random_normal_distrib)
+        result_expand_std = (result_expand - np.mean(result_expand)) / np.std(result_expand)
 
-        data_buffer, person_info_buffer = self._data_loader(base_dir=base_dir, max_data=max_data_position, start_position=start_data_position)
-        data_list = self._generate_data(data_buffer=data_buffer, person_info_buffer=person_info_buffer, generation_type=generation_type)
-        data_tensor = self._formulate_data(data_list=data_list, generation_type=generation_type)
+        result_tensor = np.zeros(shape=(result_expand.shape[0], result_expand.shape[1] + 1))
+        result_tensor[:, :-1] = result_expand_std
+        result_tensor[:, -1] = permutated_data_tensor[:, -1]
 
-        data_tensor_std = (data_tensor - np.mean(data_tensor)) / np.std(data_tensor)
-        data_tensor_PCA = pca_estimator.fit_transform(data_tensor_std)
-        permutated_data_tensor_PCA = np.random.permutation(data_tensor_PCA)
+        return result_tensor
 
-        train_data = permutated_data_tensor_PCA[: permutated_data_tensor_PCA.shape[0] // 2, :-1]
-        test_data = permutated_data_tensor_PCA[permutated_data_tensor_PCA.shape[0] // 2: , :-1]
+    def generate_data(self, base_dir):
 
-        train_labels = permutated_data_tensor_PCA[: permutated_data_tensor_PCA.shape[0] // 2, -1]
-        test_labels = permutated_data_tensor_PCA[permutated_data_tensor_PCA.shape[0] // 2: , -1]
+        data_buffer, person_info_buffer = self._data_loader(max_data=2000, base_dir=base_dir)
+        data_frame, data_tensor= self._generate_data(data_buffer=data_buffer, person_info_buffer=person_info_buffer)
+        print(data_tensor)
+        expanded_data_tensor = self._expand_randomization(data_tensor=data_tensor, need_shape=800)
+
+        train_data_tensor = expanded_data_tensor[:expanded_data_tensor.shape[0] // 2, :-1]
+        train_data_labels = expanded_data_tensor[:expanded_data_tensor.shape[0] // 2, -1]
+
+        validation_data_tensor = expanded_data_tensor[expanded_data_tensor.shape[0] // 2:, :-1]
+        validation_data_labels = expanded_data_tensor[expanded_data_tensor.shape[0] // 2:, -1]
+
+        return (train_data_tensor, train_data_labels), (validation_data_tensor, validation_data_labels)
 
         
-        return (train_data, test_data), (train_labels, test_labels)
+
 
     
 
@@ -263,10 +261,20 @@ class DataDiscriptor():
 if __name__ == "__main__":
 
     data_worker = DataDiscriptor()
-    (train_data, test_data), (train_labels, test_labels) = data_worker.generate_data(base_dir="c:\\Users\\1\\Desktop\\datasets", max_data_position=2000, generation_type="per_day")
+    (train_data, train_labels), (validation_data, validation_labels) = data_worker.generate_data(base_dir="c:\\Users\\1\\Desktop\\datasets")
 
+    plt.style.use("dark_background")
+    fig, axis = plt.subplots(nrows=2)
+    axis[0].imshow(train_data[:100, :300], cmap="magma")
+    axis[1].imshow(validation_data[:100, :300], cmap="viridis")
 
-    print(train_data, train_data.shape)
+    axis[0].grid()
+    axis[1].grid()
+
+    axis[0].set_title("train data")
+    axis[1].set_title("validation data")
+    plt.show()
+
     
 
 

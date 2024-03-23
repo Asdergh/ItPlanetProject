@@ -157,9 +157,6 @@ class DataDiscriptor():
                         add_vector.append(float(batch_number))
                         
 
-
-
-
                         if generation_type == "per_day":
 
                             for sample in data_buffer[data_batch][subject]["steps"]["samples"]:

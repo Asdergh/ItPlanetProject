@@ -19,6 +19,8 @@ class DataDiscriptor():
     # для подгрузки данных необходимо указать количество необходимых выборок пользователей
     # а так же файл с исходным расположением папки с .jsonl файлами
     # данная функция также ответсвенна за прогрузку .json файла с данными пользователя в случае если мы хотим протестировтаь работоспособность модели
+    # на выход данная функция возвращает элемент data_buffer который по сути является словарем со всеми параметрами пользователей необходимыми для обучения 
+    # нейронной  сети
 
     # variabel max_data: необходимое для процесса обучения количество выборок пользователей для обучения модели
     # type max_data: int
@@ -141,6 +143,16 @@ class DataDiscriptor():
         return result_data
     
     
+    # данная фукнция отсветственна за генерацию тензора параметров выборок пользователей сформированных из элемента data_buffer
+    # на выход данная функция возвращает два элемента data_frame и data_tensor, где data_frame - таблица в виде pandas DataFrame object
+    # а data_tensor - numpy тензор со всеми параметрами пользователей
+
+    # variabel data_buffer: python словарь со всей информацией о пользователях необходимой для обучения модели
+    # type data_buffer: python dict
+
+    # variabel person_info_buffer: словарь с личной информацией о пользователях
+    # type person_info_buffer: python dict
+
     def _generate_data(self, data_buffer, person_info_buffer):
 
         data_list = [] 
@@ -241,26 +253,46 @@ class DataDiscriptor():
         return (data_frame, data_tensor)
     
 
+    # данная функция нужна для реализации расширенной рандомизации данных
+    # иными словами это способ придать модели инструменты состязательного обучения для расширения общего пространства гипотез нашей модели (или нейронной сети)
+    
+    # variable data_tensor: тензор с параметрами пользователей для обучения нейронной сети
+    # type data_tensor: numpy tensor
+
+    # variable need_shape: необходимая размерность этогового набора данных после процедурры рандомизации
+    # type need_shape: int
+
     def _expand_randomization(self, data_tensor, need_shape):
 
     
+        random_mask_vector = np.asarray([[0.0 if np.random.random() > 0.5 else 1.0 for _ in range(need_shape)] for _ in range(data_tensor.shape[0])])
+
         permutated_data_tensor = np.random.permutation(data_tensor)
         random_normal_distrib = np.random.normal(0.19, 1.926, ((permutated_data_tensor.shape[1] - 1), need_shape))
+        
         result_expand = np.dot(permutated_data_tensor[:, :-1], random_normal_distrib)
+        result_expand[0, :] += np.random.normal(0.19, 1.926, result_expand.shape[1])
+        
         result_expand_std = (result_expand - np.mean(result_expand)) / np.std(result_expand)
-
+        result_expand_std *= random_mask_vector
+        
         result_tensor = np.zeros(shape=(result_expand.shape[0], result_expand.shape[1] + 1))
         result_tensor[:, :-1] = result_expand_std
         result_tensor[:, -1] = permutated_data_tensor[:, -1]
 
         return result_tensor
 
-    def generate_data(self, base_dir):
+
+    # данная функция неободима просто ради объядинения вызовов всех вышеперечисленных функций для генерации и предобработки данных
+    
+    # variable base_dir: путь до исходной директории
+    # type base_dir: str
+
+    def generate_data_training(self, base_dir):
 
         data_buffer, person_info_buffer = self._data_loader(max_data=2000, base_dir=base_dir)
         data_frame, data_tensor= self._generate_data(data_buffer=data_buffer, person_info_buffer=person_info_buffer)
-        print(data_tensor)
-        expanded_data_tensor = self._expand_randomization(data_tensor=data_tensor, need_shape=800)
+        expanded_data_tensor = self._expand_randomization(data_tensor=data_tensor, need_shape=100)
 
         train_data_tensor = expanded_data_tensor[:expanded_data_tensor.shape[0] // 2, :-1]
         train_data_labels = expanded_data_tensor[:expanded_data_tensor.shape[0] // 2, -1]
@@ -270,6 +302,14 @@ class DataDiscriptor():
 
         return (train_data_tensor, train_data_labels), (validation_data_tensor, validation_data_labels)
 
+
+    def generate_data_testing(self, base_dir):
+
+        data_buffer = self._data_loader(base_file_path=base_dir)
+        data_tensor = self._generate_input_samples(data_buffer=data_buffer)
+        test_data = self._expand_randomization(data_tensor=data_tensor, need_shape=100)
+
+        return test_data
         
 
 

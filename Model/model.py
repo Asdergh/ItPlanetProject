@@ -1,239 +1,107 @@
 import numpy as np
+import pandas as pd
 import tensorflow as tf
 import matplotlib.pyplot as plt
+
 from data_discriptor import DataDiscriptor
 
 
+class Model(DataDiscriptor):
 
 
-
-class Model():
-
-    def __init__(self, first_model_depth, second_model_depth, L1_regularization_rate, L2_regularization_rate) -> None:
-        
-
-        self.first_model_depth = first_model_depth
-        self.second_model_depth = second_model_depth
-        self.L1_reg_rate = L1_regularization_rate
-        self.L2_reg_rate = L2_regularization_rate
-
-        self.data_discription = DataDiscriptor(dataset_base_dir="C:\\Users\\1\\Desktop\\datasets")
-        self.data_discription.load_data()
-        self.data_discription.build_data()
-
-        self.first_model_constant_width = len(self.data_discription.data_buffer[0]["subject number: 1"]["steps"]["samples"][0]) + 3
-        self.second_model_constant_width = len(self.data_discription.data_buffer[0]["subject number: 1"]["steps"]["samples"])
-
-        
-
-
-    # метод для генерации модели глубокого обучение
-    # данный метод создает модель по тиму бинарного классификатра
-        
-    def build_model(self):
-
-        
-        self.first_input_tensor = tf.keras.Input(shape=(self.first_model_constant_width, ))
-        self.second_input_tensor = tf.keras.Input(shape=(self.second_model_constant_width, ))
-        
-
-
-        self.first_model_dense_layer = tf.keras.layers.Dense(self.first_model_constant_width, activation="relu",
-                                                             kernel_regularizer=tf.keras.regularizers.L1(self.L1_reg_rate),
-                                                             activity_regularizer=tf.keras.regularizers.L2(self.L2_reg_rate))(self.first_input_tensor)
-        
-        self.first_model_dense_layer = tf.keras.layers.Dense(self.first_model_constant_width, activation="relu",
-                                                             kernel_regularizer=tf.keras.regularizers.L1(self.L1_reg_rate),
-                                                             activity_regularizer=tf.keras.regularizers.L2(self.L2_reg_rate))(self.first_model_dense_layer)
-        
-        self.first_model_dense_layer = tf.keras.layers.Dense(self.first_model_constant_width, activation="relu",
-                                                             kernel_regularizer=tf.keras.regularizers.L1(self.L1_reg_rate),
-                                                             activity_regularizer=tf.keras.regularizers.L2(self.L2_reg_rate))(self.first_model_dense_layer)
-        
-        self.first_model_dense_layer = tf.keras.layers.Dense(self.first_model_constant_width, activation="relu",
-                                                             kernel_regularizer=tf.keras.regularizers.L1(self.L1_reg_rate),
-                                                             activity_regularizer=tf.keras.regularizers.L2(self.L2_reg_rate))(self.first_model_dense_layer)
-        
-        self.first_model_dense_layer = tf.keras.layers.Dense(self.first_model_constant_width, activation="relu",
-                                                             kernel_regularizer=tf.keras.regularizers.L1(self.L1_reg_rate),
-                                                             activity_regularizer=tf.keras.regularizers.L2(self.L2_reg_rate))(self.first_model_dense_layer)
-        
-        self.first_model_last_layer = self.first_model_dense_layer = tf.keras.layers.Dense(1, activation="sigmoid",
-                                                             kernel_regularizer=tf.keras.regularizers.L1(self.L1_reg_rate),
-                                                             activity_regularizer=tf.keras.regularizers.L2(self.L2_reg_rate))(self.first_model_dense_layer)
-        
-
-
-        self.second_model_dense_layer = tf.keras.layers.Dense(self.second_model_constant_width, activation="relu",
-                                                             kernel_regularizer=tf.keras.regularizers.L1(self.L1_reg_rate),
-                                                             activity_regularizer=tf.keras.regularizers.L2(self.L2_reg_rate))(self.second_input_tensor)
-        
-        self.second_model_dense_layer = tf.keras.layers.Dense(self.second_model_constant_width, activation="relu",
-                                                             kernel_regularizer=tf.keras.regularizers.L1(self.L1_reg_rate),
-                                                             activity_regularizer=tf.keras.regularizers.L2(self.L2_reg_rate))(self.second_model_dense_layer)
-        
-        self.second_model_dense_layer = tf.keras.layers.Dense(self.second_model_constant_width, activation="relu",
-                                                             kernel_regularizer=tf.keras.regularizers.L1(self.L1_reg_rate),
-                                                             activity_regularizer=tf.keras.regularizers.L2(self.L2_reg_rate))(self.second_model_dense_layer)
-        
-        self.second_model_dense_layer = tf.keras.layers.Dense(self.second_model_constant_width, activation="relu",
-                                                             kernel_regularizer=tf.keras.regularizers.L1(self.L1_reg_rate),
-                                                             activity_regularizer=tf.keras.regularizers.L2(self.L2_reg_rate))(self.second_model_dense_layer)
-        
-        self.second_model_dense_layer = tf.keras.layers.Dense(self.second_model_constant_width, activation="relu",
-                                                             kernel_regularizer=tf.keras.regularizers.L1(self.L1_reg_rate),
-                                                             activity_regularizer=tf.keras.regularizers.L2(self.L2_reg_rate))(self.second_model_dense_layer)
-        
-        self.second_model_last_layer = self.first_model_dense_layer = tf.keras.layers.Dense(1, activation="sigmoid",
-                                                             kernel_regularizer=tf.keras.regularizers.L1(self.L1_reg_rate),
-                                                             activity_regularizer=tf.keras.regularizers.L2(self.L2_reg_rate))(self.second_model_dense_layer)
-        
-
-        self.first_model = tf.keras.Model(self.first_input_tensor, self.first_model_last_layer)
-        self.second_model = tf.keras.Model(self.second_input_tensor, self.second_model_last_layer)
-
-
-
-        self.first_model.compile(
-            optimizer=tf.keras.optimizers.legacy.RMSprop(learning_rate=0.01),
-            loss=tf.keras.losses.BinaryCrossentropy(),
-            metrics=tf.metrics.Accuracy()
-        )
-
-        self.second_model.compile(
-            optimizer=tf.keras.optimizers.legacy.RMSprop(learning_rate=0.01),
-            loss=tf.keras.losses.BinaryCrossentropy(),
-            metrics=tf.metrics.Accuracy()
-        )
-    
-    # метод для подгрузки данных в модель нейронной сети
-        
-    def fit_model(self):
-
-        self.first_model_history = self.first_model.fit(
-            self.data_discription.samples_train_data,
-            self.data_discription.samples_train_labels,
-            batch_size=30,
-            epochs=100
-        )
-
-        self.second_model_data = np.zeros(shape=(
-            len(self.data_discription[0]),
-            len(self.data_discription[0]["subject number: 1"]["steps"]["samples"]) + 1
-        ))
-        
-        curent_subject_number = 0
-        for subject in self.data_discription[0]:
-
-            curent_samples = subject["steps"]["samples"]
-            curent_samples_vector = []
-            for sample in curent_samples:
-                
-                sample_tensor = np.asarray(sample.values())
-                sample_tensor = np.expand_dims(sample_tensor, axis=0)
-                prediction = self.first_model.predict(sample_tensor)
-
-                curent_samples_vector.append(prediction[0])
-            
-            curent_samples_vector.append(0)
-            curent_samples_vector = np.asarray(curent_samples_vector)
-            self.second_model_data[curent_subject_number] = curent_samples_vector
-
-            curent_subject_number += 1
-        
-        for subject in self.data_discription[1]:
-
-            curent_samples = subject["steps"]["samples"]
-            curent_samples_vector = []
-            for sample in curent_samples:
-                
-                sample_tensor = np.asarray(sample.values())
-                sample_tensor = np.expand_dims(sample_tensor, axis=0)
-                prediction = self.first_model.predict(sample_tensor)
-
-                curent_samples_vector.append(prediction[0])
-            
-            curent_samples_vector.append(0)
-            curent_samples_vector = np.asarray(curent_samples_vector)
-            self.second_model_data[curent_subject_number] = curent_samples_vector
-
-            curent_subject_number += 1
-        
-        self.second_train_data = self.second_model_data[: self.second_model.shape[0] // 2, :-1]
-        self.secon_train_labels = self.second_model_data[: self.second_model.shape[0] // 2 , -1]
-
-        self.second_test_data = self.second_model_data[self.second_model.shape[0] // 2: , :-1]
-        self.second_test_labels = self.second_model_data[self.second_model.shape[0] // 2, -1]
-
-
-        self.second_model_history = self.second_model.fit(
-            self.second_train_data,
-            self.second_train_labels,
-            validation_data=(self.second_test_data, self.second_test_labels),
-            batch_size=30,
-            epochs=100
-        )
-
-        self.first_model.save("C:\\Users\\1\\Desktop\\ItPLanetProject2\\SavedModels\\first_model.keras")
-        self.second_model.save("C:\\Users\\1\\Desktop\\ItPLanetProject2\\SavedModels\\second_model.keras")
+    def __init__(self) -> None:
+        super().__init__()
 
     
+    def _generate_model(self, need_shape):
+
+        input_tensor = tf.keras.Input(shape=(need_shape[1], ))
+
+        self.layer = tf.keras.layers.Dense(100, 
+                              input_shape=(need_shape[0], ), 
+                              activation="linear",
+                              activity_regularizer=tf.keras.regularizers.L1(0.001),
+                              kernel_regularizer=tf.keras.regularizers.L2(0.001))(input_tensor)
+
+
+        self.layer = tf.keras.layers.Dense(10,
+                                    activation="linear",
+                                    activity_regularizer=tf.keras.regularizers.L1(0.01),
+                                    kernel_regularizer=tf.keras.regularizers.L2(0.01))(self.layer)
+
+        #layer = tf.keras.layers.Dropout(0.5)(layer)
+        self.last_layer = tf.keras.layers.Dense(1, activation="sigmoid")(self.layer)
+
+        self.model = tf.keras.Model(input_tensor, self.last_layer)
+        self.model.compile(
+            optimizer="rmsprop",
+            loss="binary_crossentropy",
+            metrics=["accuracy"]
+        )
     
-    # метод для демонстрации хода обучения
-    # выводиться информация об метрике обучения и потерях подсчитанных функцией потерь
-    def show_history(self):
+    def _fit_model(self, train_data, train_label, validation_data=None, validation_label=None):
+
+        print(train_data.shape, train_label.shape)
+        print(validation_data.shape, validation_label.shape)
+        self.model_history = self.model.fit(train_data, train_label,
+                                epochs=100,
+                                batch_size=30,
+                                validation_data=(validation_data, validation_label))
+
+        self.model.save("C:\\Users\\1\\Desktop\\ItPLanetProject2\\SavedModels\\first_model.keras")
+    
+    def _show_history(self):
+
+
+        model_stats = [[np.asarray(self.self.model_history.history["loss"]), np.asarray(self.model_history.history["val_loss"])], 
+            [np.asarray(self.model_history.history["accuracy"]), np.asarray(self.model_history.history["val_accuracy"])]]
+        
+        labels = [["loss", "val_loss"], ["accuracy", "val_accuracy"]]
+        colors = [["red", "orange"], ["green", "blue"]]
 
         plt.style.use("dark_background")
-        fig, axis = plt.subplots(nrows=3)
+        fig, axis = plt.subplots(nrows=2, ncols=2)
+        for sample in range(len(axis)):
 
-        models_loss = [np.asarray(self.first_model_history.history["loss"]), 
-                       np.asarray(self.second_model_history.history["loss"]),
-                       np.asarray(self.second_model_history.history["val_loss"])]
-        
-        models_acc = [np.asarray(self.first_model_history.history["acc"]),
-                      np.asarray(self.second_model_history.history["acc"]),
-                      np.asarray(self.second_model_history.history["val_acc"])]
-        
-        colors = ["green", "blue", "orange"]
-        labels = [["first_model loss", "first_model acc"], ["second_model loss", "second_model acc"], ["second_model val_loss", "second_model val_acc"]]
-        linestyles = ["", "", "--"]
+            axis[sample][0].plot(range(1, model_stats[sample][0].shape[0] + 1), model_stats[sample][0], color=colors[sample][0], label=labels[sample][0])
+            axis[sample][0].fill_between(range(1, model_stats[sample][0].shape[0] + 1), model_stats[sample][0] - 0.12, model_stats[sample][0] + 0.12, color=colors[sample][0], alpha=0.25)
+            
+            axis[sample][1].plot(range(1, model_stats[sample][1].shape[0] + 1), model_stats[sample][1], color=colors[sample][1], label=labels[sample][1])
+            axis[sample][1].fill_between(range(1, model_stats[sample][1].shape[0] + 1), model_stats[sample][1] - 0.12, model_stats[sample][1] + 0.12, color=colors[sample][1], alpha=0.25)
 
-        for (samples_number, samples) in enumerate(zip(models_loss, models_acc)):
+            axis[sample][0].legend(loc="lower right")
+            axis[sample][0].grid()
+            
+            axis[sample][1].legend(loc="lower right")
+            axis[sample][1].grid()
 
-            axis[samples_number].plot(range(1, samples[0].shape[0] + 1), samples[0], color=colors[samples_number], label=labels[samples_number], linestyle=linestyles[samples_number])
-            axis[samples_number].legend(loc="upper left")
-        
         plt.show()
 
+    def train_model(self):
 
+        (train_data, train_labels), (validation_data, validation_labels) = self.generate_data(base_dir="c:\\Users\\1\\Desktop\\datasets")
+
+        self._generate_data()
+        self._fit_model(train_data=train_data, train_labels=train_labels,
+                        validation_data=validation_data, validation_labels=validation_labels)
+        self._show_history()
+
+    def make_predictions(self, subject_info_file_dir):
+
+        model = tf.keras.saving.load_model("C:\\Users\\1\\Desktop\\ItPLanetProject2\\SavedModels\\first_model.keras")
+        testing_data = self.generate_data_testing(subject_info_file_dir)
+        predictions = model.predict(testing_data[:, :-1])
+        
+        predictions_tensor = [prediction[0] for prediction in predictions]
+        result_prediction_tensor = np.asarray([sum(predictions_tensor) / len(predictions_tensor), ] + predictions_tensor)
+
+        return result_prediction_tensor
+    
 if __name__ == "__main__":
 
-    model = Model(
-        first_model_depth=5,
-        second_model_depth=5,
-        L1_regularization_rate=0.1,
-        L2_regularization_rate=0.01
-    )
-
-    model.build_model()
-    model.fit_model()
-    model.show_history() 
+    model_object = Model()
+    prediction = model_object.make_predictions(subject_info_file_dir="C:\\Users\\1\\Desktop\\ItPLanetProject2\\input-sample.json")
+    print(prediction)
 
     
 
-        
-
-
-
-
-
-
-
-            
-
-
-            
-
-        
-        
-    

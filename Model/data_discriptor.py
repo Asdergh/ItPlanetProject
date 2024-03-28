@@ -15,7 +15,22 @@ class DataDiscriptor():
 
             pass
 
-    
+    # функция загрузки данных из датасета включающего в себя набора .jsonl файлов
+    # для подгрузки данных необходимо указать количество необходимых выборок пользователей
+    # а так же файл с исходным расположением папки с .jsonl файлами
+    # данная функция также ответсвенна за прогрузку .json файла с данными пользователя в случае если мы хотим протестировтаь работоспособность модели
+
+    # variabel max_data: необходимое для процесса обучения количество выборок пользователей для обучения модели
+    # type max_data: int
+
+    # variabel start_position: индекс выборки пользователя с которой мы хотим начать подгрузку информации
+    # type start_position: int
+
+    # variabel base_dir: путь доя расплоложения дисректории с .jsonl файлами информации о пользователях
+    # type base_dir: str
+
+    # variabel base_file_path: путь до .json файла с информацией пользователя необходимой для теста нейронной сети
+    # type base_file_path: str
     def _data_loader(self, max_data=None, start_position=0, base_dir=None, base_file_path=None):
 
         data_buffer = {}
@@ -81,6 +96,10 @@ class DataDiscriptor():
 
 
 
+    # данная функция используется для формирования тензора с параметрами пользователя необходимого для тестирования нейронной сети
+    
+    # variabel data_buffer: словарь со всеми данными о пользователе сформированный функцией self._data_load(base_file_path!=None) для тестирования модели
+    # type data_buffer: python dict
     def _generate_input_samples(self, data_buffer):
 
         profile = data_buffer["profile"]

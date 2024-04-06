@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import tensorflow as tf
+import matplotlib
 import matplotlib.pyplot as plt
 
 from data_discriptor import DataDiscriptor
@@ -102,6 +103,10 @@ if __name__ == "__main__":
     model_object = Model()
     prediction = model_object.make_predictions(subject_info_file_dir="C:\\Users\\1\\Desktop\\ItPLanetProject2\\input-sample.json")
     print(prediction)
+    print("tensorflow: ", tf.__version__)
+    print("numpy: ", np.__version__)
+    print("pandas: ", pd.__version__)
+    print("matplotlib: ", matplotlib.__version__)
 
     
 
